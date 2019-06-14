@@ -9,13 +9,11 @@ function! g:LoclistNearest() abort
     endif
     let pos = getpos('.')
     let ln = pos[1]
-    if exists("b:loclist_follow_line") && b:loclist_follow_line == ln
-        return
-    endif
-    let b:loclist_follow_line = ln
 
     " determine current nearest, assume last as optimum start, correct
     " and account for multiple items per line
+
+    " line
     let idx = 0
     if exists("b:loclist_follow_pos")
         let idx = min([l_ll - 1, b:loclist_follow_pos - 1])
@@ -26,7 +24,18 @@ function! g:LoclistNearest() abort
     while get(ll, idx).lnum < ln && idx < l_ll - 1
         let idx += 1
     endwhile
-    let idx_next = ((abs(get(ll, max([idx - 1, 0])).lnum - ln) <= abs(get(ll,idx).lnum - ln)) ? max([idx - 1, 0]) : idx)
+    " column
+    if get(ll, idx).lnum == ln
+        let col = pos[2]
+        while idx + 1 < l_ll && get(ll, idx + 1).lnum == ln
+            if abs(get(ll, idx + 1).col - col) < abs(get(ll, idx).col - col)
+                let idx += 1
+            else
+                break
+            endif
+        endwhile
+    endif
+    let idx_next = ((abs(get(ll, max([idx - 1, 0])).lnum - ln) < abs(get(ll,idx).lnum - ln)) ? max([idx - 1, 0]) : idx)
 
     " set
     if idx_next < 0 || (exists("b:loclist_follow_pos") && b:loclist_follow_pos == idx_next + 1)
@@ -34,8 +43,6 @@ function! g:LoclistNearest() abort
     endif
     let b:loclist_follow_pos = idx_next + 1
     exe "ll " . b:loclist_follow_pos
-
-    " cleanup
     call setpos(".", pos)
 endfunction
 
