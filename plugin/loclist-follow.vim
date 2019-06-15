@@ -48,7 +48,28 @@ function! g:LoclistNearest() abort
     call setpos(".", pos)
 endfunction
 
-" loclist follow nearest
-if exists('g:loclist_follow') && g:loclist_follow == 1
-    autocmd CursorMoved <buffer> call g:LoclistNearest()
-endif
+function! s:BufReadPostHook() abort
+    if exists('g:loclist_follow') && g:loclist_follow == 1
+        augroup loclist_follow
+            autocmd! CursorMoved
+        augroup END
+    endif
+endfunction
+
+function! s:BufWritePostHook() abort
+    if exists('g:loclist_follow') && g:loclist_follow == 1
+        " enable loclist-follow
+        augroup loclist_follow
+            autocmd CursorMoved <buffer> call g:LoclistNearest()
+        augroup END
+    endif
+endfunction
+
+" install loclist-follow
+augroup loclist_follow
+    autocmd!
+    if exists('g:loclist_follow')
+        autocmd BufReadPost * call s:BufReadPostHook()
+        autocmd BufWritePost * call s:BufWritePostHook()
+    endif
+augroup END
