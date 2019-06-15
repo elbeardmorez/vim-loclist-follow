@@ -1,6 +1,6 @@
 
 " jump to nearest item in the location list based on current line
-function! g:LoclistNearest() abort
+function! s:LoclistNearest() abort
     " short-circuits
     let ll = getloclist('')
     let l_ll = len(ll)
@@ -60,7 +60,7 @@ function! s:BufWritePostHook() abort
     if exists('g:loclist_follow') && g:loclist_follow == 1
         " enable loclist-follow
         augroup loclist_follow
-            autocmd CursorMoved <buffer> call g:LoclistNearest()
+            autocmd CursorMoved <buffer> call s:LoclistNearest()
         augroup END
     endif
 endfunction
