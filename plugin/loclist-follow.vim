@@ -1,7 +1,19 @@
 
+" toggle follow locally
+function! s:LoclistFollowToggle()
+    if exists('b:loclist_follow')
+        let b:loclist_follow = !b:loclist_follow
+    else
+        let b:loclist_follow = !g:loclist_follow
+    endif
+endfunction
+
 " jump to nearest item in the location list based on current line
 function! s:LoclistNearest() abort
     " short-circuits
+    if exists('b:loclist_follow') && !b:loclist_follow
+        return
+    endif
     let ll = getloclist('')
     let l_ll = len(ll)
     if l_ll == 0
@@ -74,3 +86,5 @@ augroup loclist_follow
         autocmd BufWritePost * call s:BufWritePostHook()
     endif
 augroup END
+
+command! -bar LoclistFollowToggle call s:LoclistFollowToggle()
