@@ -9,14 +9,20 @@ function! s:LoclistFollowToggle()
 endfunction
 
 " jump to nearest item in the location list based on current line
-function! s:LoclistNearest() abort
+function! s:LoclistNearest(bnr) abort
     " short-circuits
     if exists('b:loclist_follow') && !b:loclist_follow
+        return
+    endif
+    if exists('b:loclist_follow_file') && b:loclist_follow_file != bufname('')
         return
     endif
     let ll = getloclist('')
     let l_ll = len(ll)
     if l_ll == 0
+        return
+    endif
+    if a:bnr != ll[0].bufnr
         return
     endif
     let pos = getpos('.')
@@ -69,12 +75,13 @@ function! s:BufReadPostHook() abort
     endif
 endfunction
 
-function! s:BufWritePostHook() abort
+function! s:BufWritePostHook(file_) abort
     if exists('g:loclist_follow') && g:loclist_follow == 1
         " enable loclist-follow
         augroup loclist_follow
-            autocmd CursorMoved <buffer> call s:LoclistNearest()
+            autocmd CursorMoved <buffer> call s:LoclistNearest(expand('<abuf>'))
         augroup END
+        let b:loclist_follow_file = a:file_
     endif
 endfunction
 
@@ -83,7 +90,7 @@ augroup loclist_follow
     autocmd!
     if exists('g:loclist_follow')
         autocmd BufReadPost * call s:BufReadPostHook()
-        autocmd BufWritePost * call s:BufWritePostHook()
+        autocmd BufReadPost * call s:BufWritePostHook(expand('<amatch>'))
     endif
 augroup END
 
