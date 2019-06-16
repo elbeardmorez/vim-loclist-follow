@@ -66,21 +66,16 @@ function! s:LoclistNearest(bnr) abort
     call setpos(".", pos)
 endfunction
 
-function! s:BufReadPostHook() abort
-    if exists('g:loclist_follow') && g:loclist_follow == 1
-        augroup loclist_follow
-            autocmd! CursorMoved <buffer>
-            unlet! b:loclist_follow_pos
-        augroup END
-    endif
-endfunction
-
-function! s:BufWritePostHook(file_) abort
+function! s:BufReadPostHook(file_) abort
+    autocmd! loclist_follow CursorMoved <buffer>
+    unlet! b:loclist_follow
+    unlet! b:loclist_follow_pos
     if exists('g:loclist_follow') && g:loclist_follow == 1
         " enable loclist-follow
         augroup loclist_follow
             autocmd CursorMoved <buffer> call s:LoclistNearest(expand('<abuf>'))
         augroup END
+        let b:loclist_follow = 1
         let b:loclist_follow_file = a:file_
     endif
 endfunction
@@ -89,8 +84,7 @@ endfunction
 augroup loclist_follow
     autocmd!
     if exists('g:loclist_follow')
-        autocmd BufReadPost * call s:BufReadPostHook()
-        autocmd BufReadPost * call s:BufWritePostHook(expand('<amatch>'))
+        autocmd BufReadPost * call s:BufReadPostHook(expand('<amatch>'))
     endif
 augroup END
 
