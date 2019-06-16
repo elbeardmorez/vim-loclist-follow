@@ -63,7 +63,7 @@ endfunction
 function! s:BufReadPostHook() abort
     if exists('g:loclist_follow') && g:loclist_follow == 1
         augroup loclist_follow
-            autocmd! CursorMoved
+            autocmd! CursorMoved <buffer>
             unlet! b:loclist_follow_pos
         augroup END
     endif
