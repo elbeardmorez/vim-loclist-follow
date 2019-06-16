@@ -67,6 +67,9 @@ function! s:LoclistNearest(bnr) abort
 endfunction
 
 function! s:BufReadPostHook(file_) abort
+    if getwininfo(win_getid())[0].quickfix == 1
+        return
+    endif
     autocmd! loclist_follow CursorMoved <buffer>
     unlet! b:loclist_follow
     unlet! b:loclist_follow_pos
