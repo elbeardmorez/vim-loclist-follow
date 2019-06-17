@@ -14,7 +14,7 @@ function! s:LoclistNearest(bnr) abort
     if exists('b:loclist_follow') && !b:loclist_follow
         return
     endif
-    if exists('b:loclist_follow_file') && b:loclist_follow_file != bufname('')
+    if exists('b:loclist_follow_file') && b:loclist_follow_file != fnamemodify(bufname(''), ':p')
         return
     endif
     let ll = getloclist('')
