@@ -1,13 +1,4 @@
 
-" toggle follow locally
-function! s:LoclistFollowToggle()
-    if exists('b:loclist_follow')
-        let b:loclist_follow = !b:loclist_follow
-    else
-        let b:loclist_follow = !g:loclist_follow
-    endif
-endfunction
-
 " jump to nearest item in the location list based on current line
 function! s:LoclistNearest(bnr) abort
     " short-circuits
@@ -66,6 +57,24 @@ function! s:LoclistNearest(bnr) abort
     call setpos(".", pos)
 endfunction
 
+" toggle follow locally
+function! s:LoclistFollowToggle()
+    if exists('b:loclist_follow')
+        let b:loclist_follow = !b:loclist_follow
+    else
+        let b:loclist_follow = !g:loclist_follow
+    endif
+endfunction
+
+" toggle follow globally
+function! s:LoclistFollowGlobalToggle()
+    if exists('g:loclist_follow')
+        let g:loclist_follow = !g:loclist_follow
+    else
+        let g:loclist_follow = 1
+    endif
+endfunction
+
 function! s:BufReadPostHook(file_) abort
     if getwininfo(win_getid())[0].quickfix == 1
         return
@@ -92,3 +101,4 @@ augroup loclist_follow
 augroup END
 
 command! -bar LoclistFollowToggle call s:LoclistFollowToggle()
+command! -bar LoclistFollowGlobalToggle call s:LoclistFollowGlobalToggle()
