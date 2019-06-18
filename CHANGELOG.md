@@ -1,7 +1,12 @@
 # changelog
 
+#### 2019Jun18
+## release: 0.2.0 version: -
+- [mod] refactor automation ([Pete Beardmore](https://github.com/elbeardmorez))
+- [add] 'LoclistFollowGlobalToggle' ([Pete Beardmore](https://github.com/elbeardmorez))
+
 #### 2019Jun17
-## release: 0.1.1 version: -
+## release: 0.1.1 version: cb1cc5e172925321e74fa8d7457f482f2802dd9c
 - [fix] bufname path comparison ([Pete Beardmore](https://github.com/elbeardmorez))
 
 #### 2019Jun16
