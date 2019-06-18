@@ -151,6 +151,7 @@ augroup loclist_follow
     autocmd!
     if exists('g:loclist_follow')
         autocmd BufReadPost * call s:BufReadPostHook(expand('<amatch>'))
+        autocmd BufDelete * call s:LoclistFollowToggle(-1)
     endif
 augroup END
 
