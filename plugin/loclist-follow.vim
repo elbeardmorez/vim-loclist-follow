@@ -58,37 +58,80 @@ function! s:LoclistNearest(bnr) abort
 endfunction
 
 " toggle follow locally
-function! s:LoclistFollowToggle()
-    if exists('b:loclist_follow')
-        let b:loclist_follow = !b:loclist_follow
+function! s:LoclistFollowToggle(...)
+    "switch | -1: off, 0: auto, 1: on
+    let switch = get(a:, 1, 0)
+
+    "b:loclist_follow | -1: globally off, 0: locally off, 1: on
+    let bv = 0
+    if switch == 0
+        if !exists('b:loclist_follow') || b:loclist_follow != 1
+            let bv = 1
+        endif
+    elseif switch == 1
+        let bv = 1
+    endif
+    let b:loclist_follow = bv
+    if bv
+        execute "autocmd loclist_follow CursorMoved <buffer=" . bufnr('') . "> call s:LoclistNearest(" . bufnr('') . ")"
     else
-        let b:loclist_follow = !g:loclist_follow
+        autocmd! loclist_follow CursorMoved <buffer>
     endif
 endfunction
 
 " toggle follow globally
-function! s:LoclistFollowGlobalToggle()
-    if exists('g:loclist_follow')
-        let g:loclist_follow = !g:loclist_follow
-    else
-        let g:loclist_follow = 1
+function! s:LoclistFollowGlobalToggle(...)
+    "switch | -1: off, 0: auto, 1: on
+    let switch = get(a:, 1, 0)
+
+    "g:loclist_follow | 0: globally off, 1: globally on
+    let gv = 0
+    if switch == 0
+        if !exists('g:loclist_follow') || g:loclist_follow == 0
+            let gv = 1
+        endif
+    elseif switch == 1
+        let gv = 1
     endif
+
+    let g:loclist_follow = gv
+    if gv == 0
+        "remove all hooks
+        autocmd! loclist_follow CursorMoved
+    endif
+    "ensure any touched are 'global switched' -1 <-> 1
+    let touched = filter(getbufinfo(), {i, b -> exists('b.variables.loclist_follow') })
+    let bv = (gv == 0 ? -1 : 1)
+    for b in touched
+        if b.variables.loclist_follow != 0
+            call setbufvar(b.bufnr, 'loclist_follow', bv)
+            if bv == 1
+                "add hook to previously globally toggled buffer
+                execute "autocmd! CursorMoved <buffer=" . b.bufnr . "> call s:LoclistNearest(" . b.bufnr . ")"
+            endif
+        endif
+    endfor
 endfunction
 
 function! s:BufReadPostHook(file_) abort
     if getwininfo(win_getid())[0].quickfix == 1
         return
     endif
-    autocmd! loclist_follow CursorMoved <buffer>
-    unlet! b:loclist_follow
-    unlet! b:loclist_follow_pos
-    if exists('g:loclist_follow') && g:loclist_follow == 1
-        " enable loclist-follow
-        augroup loclist_follow
-            autocmd CursorMoved <buffer> call s:LoclistNearest(expand('<abuf>'))
-        augroup END
-        let b:loclist_follow = 1
+
+    if g:loclist_follow == 1
+        if !exists('b:loclist_follow')
+            " enable loclist-follow
+            call s:LoclistFollowToggle(1)
+        endif
+        if exists('b:loclist_follow_file') && b:loclist_follow_file != a:file_
+            " reset
+            unlet! b:loclist_follow_pos
+        endif
         let b:loclist_follow_file = a:file_
+    else
+        call s:LoclistFollowToggle(-1)
+        unlet! b:loclist_follow
+        unlet! b:loclist_follow_file
     endif
 endfunction
 
