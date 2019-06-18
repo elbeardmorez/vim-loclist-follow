@@ -6,7 +6,7 @@ Use this plugin to enable automatic updating of the selected location list item 
 Tested against Syntastic and Ale setups with dozens of unique / split buffer windows opened (and their respective location list windows open (and closed) and populated) with no noticable lag. Please report any issues.
 
 ## usage
-Enabled globally via:
+To enable this plugin's functionality the global `g:loclist_follow` variable **must** be explicitly set either on/off, likely through an rc file entry e.g.:
 ```
     let g:loclist_follow = 1
 ```

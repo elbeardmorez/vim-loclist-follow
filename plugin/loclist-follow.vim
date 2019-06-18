@@ -59,6 +59,10 @@ endfunction
 
 " toggle follow locally
 function! s:LoclistFollowToggle(...)
+    if !exists('g:loclist_follow')
+        return
+    endif
+
     "switch | -1: off, 0: auto, 1: on
     let switch = get(a:, 1, 0)
 
@@ -81,6 +85,10 @@ endfunction
 
 " toggle follow globally
 function! s:LoclistFollowGlobalToggle(...)
+    if !exists('g:loclist_follow')
+        return
+    endif
+
     "switch | -1: off, 0: auto, 1: on
     let switch = get(a:, 1, 0)
 
@@ -114,6 +122,9 @@ function! s:LoclistFollowGlobalToggle(...)
 endfunction
 
 function! s:BufReadPostHook(file_) abort
+    if !exists('g:loclist_follow')
+        return
+    endif
     if getwininfo(win_getid())[0].quickfix == 1
         return
     endif
