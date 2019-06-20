@@ -29,7 +29,7 @@ function! s:LoclistNearest(bnr) abort
 
     " line
     let idx = 0
-    if exists("b:loclist_follow_pos")
+    if exists('b:loclist_follow_pos')
         let idx = min([l_ll - 1, b:loclist_follow_pos - 1])
     endif
     while get(ll, idx).lnum >= ln && idx > 0
@@ -54,12 +54,12 @@ function! s:LoclistNearest(bnr) abort
     let idx_next = ((abs(get(ll, max([idx - 1, 0])).lnum - ln) < abs(get(ll,idx).lnum - ln)) ? max([idx - 1, 0]) : idx)
 
     " set
-    if idx_next < 0 || (exists("b:loclist_follow_pos") && b:loclist_follow_pos == idx_next + 1)
+    if idx_next < 0 || (exists('b:loclist_follow_pos') && b:loclist_follow_pos == idx_next + 1)
         return
     endif
     let b:loclist_follow_pos = idx_next + 1
-    exe "ll " . b:loclist_follow_pos
-    call setpos(".", pos)
+    exe 'll ' . b:loclist_follow_pos
+    call setpos('.', pos)
 endfunction
 
 " retrieve list of selected hook events
@@ -72,7 +72,7 @@ function! s:LoclistFollowHookEvents()
         if exists('s:loclist_follow_hook_events.' . c)
             call add(events, s:loclist_follow_hook_events[c])
         else
-            echom("ignoring invalid mode type '" . c . "'")
+            echom('ignoring invalid mode type ''' . c . '''')
         endif
         let l += 1
     endwhile
@@ -102,11 +102,11 @@ function! s:LoclistFollowToggle(...)
     let b:loclist_follow = bv
     if bv
         for ev in events
-            execute "autocmd loclist_follow" ev "<buffer=" . bufnr('') . "> call s:LoclistNearest(" . bufnr('') . ")"
+            execute 'autocmd loclist_follow' ev '<buffer=' . bufnr('') . '> call s:LoclistNearest(' . bufnr('') . ')'
         endfor
     else
         for ev in events
-            execute "autocmd! loclist_follow" ev "<buffer>"
+            execute 'autocmd! loclist_follow' ev '<buffer>'
         endfor
     endif
 endfunction
@@ -135,7 +135,7 @@ function! s:LoclistFollowGlobalToggle(...)
     if gv == 0
         "remove all hooks
         for ev in events
-            execute "autocmd! loclist_follow" ev
+            execute 'autocmd! loclist_follow' ev
         endfor
     endif
     "ensure any touched are 'global switched' -1 <-> 1
@@ -147,7 +147,7 @@ function! s:LoclistFollowGlobalToggle(...)
             if bv == 1
                 "add hook to previously globally toggled buffer
                 for ev in events
-                    execute "autocmd!" ev "<buffer=" . b.bufnr . "> call s:LoclistNearest(" . b.bufnr . ")"
+                    execute 'autocmd!' ev '<buffer=' . b.bufnr . '> call s:LoclistNearest(' . b.bufnr . ')'
                 endfor
             endif
         endif
