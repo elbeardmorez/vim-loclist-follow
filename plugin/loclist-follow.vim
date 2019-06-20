@@ -1,4 +1,9 @@
 
+" defaults
+let s:loclist_follow_modes = 'ni'
+" mode event map
+let s:loclist_follow_hook_events = {'n': 'CursorMoved', 'i': 'CursorMovedI'}
+
 " jump to nearest item in the location list based on current line
 function! s:LoclistNearest(bnr) abort
     " short-circuits
@@ -57,6 +62,23 @@ function! s:LoclistNearest(bnr) abort
     call setpos(".", pos)
 endfunction
 
+" retrieve list of selected hook events
+function! s:LoclistFollowHookEvents()
+    let modes = exists('g:loclist_follow_modes') ? g:loclist_follow_modes : s:loclist_follow_modes
+    let l = 0
+    let events = []
+    while l < len(modes)
+        let c = tolower(modes[l:l])
+        if exists('s:loclist_follow_hook_events.' . c)
+            call add(events, s:loclist_follow_hook_events[c])
+        else
+            echom("ignoring invalid mode type '" . c . "'")
+        endif
+        let l += 1
+    endwhile
+    return events
+endfunction
+
 " toggle follow locally
 function! s:LoclistFollowToggle(...)
     if !exists('g:loclist_follow')
@@ -75,11 +97,17 @@ function! s:LoclistFollowToggle(...)
     elseif switch == 1
         let bv = 1
     endif
+
+    let events = s:LoclistFollowHookEvents()
     let b:loclist_follow = bv
     if bv
-        execute "autocmd loclist_follow CursorMoved <buffer=" . bufnr('') . "> call s:LoclistNearest(" . bufnr('') . ")"
+        for ev in events
+            execute "autocmd loclist_follow" ev "<buffer=" . bufnr('') . "> call s:LoclistNearest(" . bufnr('') . ")"
+        endfor
     else
-        autocmd! loclist_follow CursorMoved <buffer>
+        for ev in events
+            execute "autocmd! loclist_follow" ev "<buffer>"
+        endfor
     endif
 endfunction
 
@@ -102,10 +130,13 @@ function! s:LoclistFollowGlobalToggle(...)
         let gv = 1
     endif
 
+    let events = s:LoclistFollowHookEvents()
     let g:loclist_follow = gv
     if gv == 0
         "remove all hooks
-        autocmd! loclist_follow CursorMoved
+        for ev in events
+            execute "autocmd! loclist_follow" ev
+        endfor
     endif
     "ensure any touched are 'global switched' -1 <-> 1
     let touched = filter(getbufinfo(), {i, b -> exists('b.variables.loclist_follow') })
@@ -115,7 +146,9 @@ function! s:LoclistFollowGlobalToggle(...)
             call setbufvar(b.bufnr, 'loclist_follow', bv)
             if bv == 1
                 "add hook to previously globally toggled buffer
-                execute "autocmd! CursorMoved <buffer=" . b.bufnr . "> call s:LoclistNearest(" . b.bufnr . ")"
+                for ev in events
+                    execute "autocmd!" ev "<buffer=" . b.bufnr . "> call s:LoclistNearest(" . b.bufnr . ")"
+                endfor
             endif
         endif
     endfor
