@@ -72,7 +72,7 @@ function! s:LoclistFollowHookEvents()
         if exists('s:loclist_follow_hook_events.' . c)
             call add(events, s:loclist_follow_hook_events[c])
         else
-            echom('ignoring invalid mode type ''' . c . '''')
+            redraw | echo('ignoring invalid mode type ''' . c . '''')
         endif
         let l += 1
     endwhile
