@@ -1,7 +1,7 @@
 # vim-loclist-follow
 
 ## description
-Use this plugin to enable automatic updating of the selected location list item based on the current cursor position. The nearest item with be selected.
+Use this plugin to enable automatic updating of the selected location list item based on the current cursor position. The item selected is determined by the target type which by default selects the nearest item.
 
 Tested against Syntastic and Ale setups with dozens of unique / split buffer windows opened (and their respective location list windows open (and closed) and populated) with no noticable lag. Please report any issues.
 
@@ -17,6 +17,12 @@ When globally enabled, any opened/read buffers will have the appropriate hook in
     let g:loclist_follow_modes = 'n'            "[default: 'ni']
 ```
 When globally toggled, all buffers will be toggled unless they have been locally toggled off (via `:LoclistFollow` / `let b:loclist_follow = 0`) - this buffer local variable state removes the buffer from the influence of global toggling. When globally disabled, locally enabling a buffer **will** enable the functionality locally and will not change the global state.
+
+The global `g:loclist_follow_target` variable and its corresponding command for toggling `LoclistFollowTargetToggle` can be used to switch the target type between the following values:
+
+- `nearest`  : targets the closest item to the cursor on a line basis
+- `previous`  : targets the item under cursor, else the previous item in the list
+- `next`  : targets the item under cursor, else the next item in the list
 
 ## installation
 #### autoload

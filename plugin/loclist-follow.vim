@@ -1,8 +1,10 @@
 
 " defaults
 let s:loclist_follow_modes = 'ni'
+let s:loclist_follow_target = [0, 'nearest']
 " mode event map
 let s:loclist_follow_hook_events = {'n': 'CursorMoved', 'i': 'CursorMovedI'}
+let s:loclist_follow_target_types = {0: [0, 'nearest'], 1: [1, 'previous'], 2: [2, 'next']}
 
 " jump to nearest item in the location list based on current line
 function! s:LoclistNearest(bnr) abort
@@ -24,11 +26,13 @@ function! s:LoclistNearest(bnr) abort
     let pos = getpos('.')
     let ln = pos[1]
 
-    " determine current nearest, assume last as optimum start, correct
-    " and account for multiple items per line
+    " determine current item based of target type (default: nearest), assume
+    " last as optimum start, correct and account for multiple items per line
+
+    let target = s:loclist_follow_target[1]
+    let idx = 0
 
     " line
-    let idx = 0
     if exists('b:loclist_follow_pos')
         let idx = min([l_ll - 1, b:loclist_follow_pos - 1])
     endif
@@ -38,20 +42,35 @@ function! s:LoclistNearest(bnr) abort
     while get(ll, idx).lnum < ln && idx < l_ll - 1
         let idx += 1
     endwhile
+
     " column
     if get(ll, idx).lnum == ln
         let col = pos[2]
         while idx + 1 < l_ll && get(ll, idx + 1).lnum == ln
-            if abs(get(ll, idx + 1).col - col) < abs(get(ll, idx).col - col)
+            if col > get(ll, idx + 1).col
                 let idx += 1
-            elseif col > get(ll, idx + 1).col
+            elseif col == get(ll, idx).col && col == get(ll, idx + 1).col
+                break
+            elseif abs(get(ll, idx + 1).col - col) < abs(get(ll, idx).col - col)
                 let idx += 1
             else
                 break
             endif
         endwhile
+        if target ==? 'previous' && col >= get(ll, idx).col
+            let idx = min([idx + 1, l_ll])
+        elseif target ==? 'next' && col > get(ll, idx).col
+            let idx = min([idx + 1, l_ll])
+        endif
     endif
-    let idx_next = ((abs(get(ll, max([idx - 1, 0])).lnum - ln) < abs(get(ll,idx).lnum - ln)) ? max([idx - 1, 0]) : idx)
+
+    let jump = 0
+    if target ==? 'nearest'
+        let jump = abs(get(ll, max([idx - 1, 0])).lnum - ln) < abs(get(ll,idx).lnum - ln) ? -1 : 0
+    elseif target ==? 'previous'
+        let jump = -1
+    endif
+    let idx_next = min([max([idx + jump, 0]), l_ll - 1])
 
     " set
     if idx_next < 0 || (exists('b:loclist_follow_pos') && b:loclist_follow_pos == idx_next + 1)
@@ -154,6 +173,37 @@ function! s:LoclistFollowGlobalToggle(...)
     endfor
 endfunction
 
+function! s:LoclistFollowTarget()
+    if s:loclist_follow_target[1] != g:loclist_follow_target
+        let match = filter(values(s:loclist_follow_target_types), 'v:val[1] == g:loclist_follow_target')
+        if len(match) == 0
+            redraw | echo('ignoring invalid target type ''' . g:loclist_follow_target . '''')
+            unlet! g:loclist_follow_target
+        else
+            let s:loclist_follow_target = match[0]
+        endif
+    endif
+endfunction
+
+function! s:LoclistFollowTargetToggle()
+    if !exists('g:loclist_follow')
+        return
+    endif
+
+    if exists('g:loclist_follow_target')
+        " validate target
+        call s:LoclistFollowTarget()
+    endif
+
+    " cycle / toggle
+    let s:loclist_follow_target = s:loclist_follow_target_types[(s:loclist_follow_target[0] + 1) % len(s:loclist_follow_target_types)]
+    redraw | echo('loclist-follow-target toggled: ''' . s:loclist_follow_target[1] . '''')
+    if exists('g:loclist_follow_target')
+        " sync global
+        let g:loclist_follow_target = s:loclist_follow_target[1]
+    endif
+endfunction
+
 function! s:BufReadPostHook(file_) abort
     if !exists('g:loclist_follow')
         return
@@ -163,6 +213,10 @@ function! s:BufReadPostHook(file_) abort
     endif
 
     if g:loclist_follow == 1
+        if exists('g:loclist_follow_target')
+            " validate target
+            call s:LoclistFollowTarget()
+        endif
         if !exists('b:loclist_follow')
             " enable loclist-follow
             call s:LoclistFollowToggle(1)
@@ -190,3 +244,4 @@ augroup END
 
 command! -bar LoclistFollowToggle call s:LoclistFollowToggle()
 command! -bar LoclistFollowGlobalToggle call s:LoclistFollowGlobalToggle()
+command! -bar LoclistFollowTargetToggle call s:LoclistFollowTargetToggle()
