@@ -230,6 +230,7 @@ function! s:BufReadPostHook(file_) abort
         call s:LoclistFollowToggle(-1)
         unlet! b:loclist_follow
         unlet! b:loclist_follow_file
+        unlet! b:loclist_follow_pos
     endif
 endfunction
 
