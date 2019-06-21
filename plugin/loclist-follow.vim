@@ -158,7 +158,7 @@ function! s:LoclistFollowGlobalToggle(...)
         endfor
     endif
     "ensure any touched are 'global switched' -1 <-> 1
-    let touched = filter(getbufinfo(), {i, b -> exists('b.variables.loclist_follow') })
+    let touched = filter(getbufinfo(), 'exists("v:val.variables.loclist_follow")')
     let bv = (gv == 0 ? -1 : 1)
     for b in touched
         if b.variables.loclist_follow != 0
