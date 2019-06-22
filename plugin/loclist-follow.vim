@@ -7,7 +7,7 @@ let s:loclist_follow_hook_events = {'n': 'CursorMoved', 'i': 'CursorMovedI'}
 let s:loclist_follow_target_types = {0: [0, 'nearest'], 1: [1, 'previous'], 2: [2, 'next'], 3: [3, 'towards'], 4: [4, 'away']}
 
 " jump to nearest item in the location list based on current line
-function! s:LoclistFollow(bnr) abort
+function! s:LoclistFollow(scope, bnr) abort
     " short-circuits
     if exists('b:loclist_follow') && !b:loclist_follow
         return
@@ -17,7 +17,8 @@ function! s:LoclistFollow(bnr) abort
     endif
     let ll = []
     let ll_pos = 1
-    for v in getloclist('')
+    let ll_scope = a:scope ==? 'global' ? getqflist() : getloclist('')
+    for v in ll_scope
         if v.bufnr == a:bnr
             call add(ll, [ll_pos, v])
         endif
@@ -96,7 +97,7 @@ function! s:LoclistFollow(bnr) abort
     endif
     let ll_pos = ll[idx_next][0]
     let b:loclist_follow_pos = ll_pos
-    exe 'll ' . b:loclist_follow_pos
+    exe (a:scope ==? 'global' ? 'cc' : 'll') b:loclist_follow_pos
     call setpos('.', pos)
 endfunction
 
@@ -140,7 +141,8 @@ function! s:LoclistFollowToggle(...)
     let b:loclist_follow = bv
     if bv
         for ev in events
-            execute 'autocmd loclist_follow' ev '<buffer=' . bufnr('') . '> call s:LoclistFollow(' . bufnr('') . ')'
+            execute 'autocmd loclist_follow' ev '<buffer=' . bufnr('') . '> call s:LoclistFollow("local", ' . bufnr('') . ')'
+            execute 'autocmd loclist_follow' ev '<buffer=' . bufnr('') . '> call s:LoclistFollow("global", ' . bufnr('') . ')'
         endfor
     else
         for ev in events
@@ -185,7 +187,8 @@ function! s:LoclistFollowGlobalToggle(...)
             if bv == 1
                 "add hook to previously globally toggled buffer
                 for ev in events
-                    execute 'autocmd!' ev '<buffer=' . b.bufnr . '> call s:LoclistFollow(' . b.bufnr . ')'
+                    execute 'autocmd!' ev '<buffer=' . b.bufnr . '> call s:LoclistFollow("local", ' . b.bufnr . ')'
+                    execute 'autocmd!' ev '<buffer=' . b.bufnr . '> call s:LoclistFollow("global", ' . b.bufnr . ')'
                 endfor
             endif
         endif
