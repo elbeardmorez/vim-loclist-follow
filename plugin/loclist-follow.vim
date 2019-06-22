@@ -13,9 +13,6 @@ function! s:LoclistNearest(bnr) abort
     if l_ll == 0
         return
     endif
-    if a:bnr != ll[0].bufnr
-        return
-    endif
     let pos = getpos('.')
     let ln = pos[1]
 
@@ -27,12 +24,18 @@ function! s:LoclistNearest(bnr) abort
     if exists("b:loclist_follow_pos")
         let idx = min([l_ll - 1, b:loclist_follow_pos - 1])
     endif
-    while get(ll, idx).lnum >= ln && idx > 0
+    while (get(ll, idx).bufnr != a:bnr || get(ll, idx).lnum >= ln) && idx > 0
         let idx -= 1
     endwhile
-    while get(ll, idx).lnum < ln && idx < l_ll - 1
+    while (get(ll, idx).bufnr != a:bnr || get(ll, idx).lnum < ln) && idx < l_ll - 1
         let idx += 1
     endwhile
+
+    if get(ll, idx).bufnr != a:bnr
+      " then we haven't found a better entry that's still in the current buffer
+      return
+    endif
+
     " column
     if get(ll, idx).lnum == ln
         let col = pos[2]
@@ -49,7 +52,7 @@ function! s:LoclistNearest(bnr) abort
     let idx_next = ((abs(get(ll, max([idx - 1, 0])).lnum - ln) < abs(get(ll,idx).lnum - ln)) ? max([idx - 1, 0]) : idx)
 
     " set
-    if idx_next < 0 || (exists("b:loclist_follow_pos") && b:loclist_follow_pos == idx_next + 1)
+    if idx_next < 0 || get(ll, idx_next).bufnr != a:bnr || (exists("b:loclist_follow_pos") && b:loclist_follow_pos == idx_next + 1)
         return
     endif
     let b:loclist_follow_pos = idx_next + 1
