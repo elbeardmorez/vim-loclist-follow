@@ -191,12 +191,13 @@ function! s:LoclistFollowTarget()
     if s:loclist_follow_target[1] != g:loclist_follow_target
         let match = filter(values(s:loclist_follow_target_types), 'v:val[1] == g:loclist_follow_target')
         if len(match) == 0
-            redraw | echo('ignoring invalid target type ''' . g:loclist_follow_target . '''')
-            unlet! g:loclist_follow_target
+            redraw | echo('invalid target type ''' . g:loclist_follow_target . '''')
+            return 1
         else
             let s:loclist_follow_target = match[0]
         endif
     endif
+    return 0
 endfunction
 
 function! s:LoclistFollowTargetToggle()
@@ -204,15 +205,20 @@ function! s:LoclistFollowTargetToggle()
         return
     endif
 
+    let valid = 1
     if exists('g:loclist_follow_target')
         " validate target
-        call s:LoclistFollowTarget()
+        let valid = !s:LoclistFollowTarget()
+        if valid == 0
+            " prefer failure
+            return
+        endif
     endif
 
     " cycle / toggle
     let s:loclist_follow_target = s:loclist_follow_target_types[(s:loclist_follow_target[0] + 1) % len(s:loclist_follow_target_types)]
     redraw | echo('loclist-follow-target toggled: ''' . s:loclist_follow_target[1] . '''')
-    if exists('g:loclist_follow_target')
+    if exists('g:loclist_follow_target') && valid == 1
         " sync global
         let g:loclist_follow_target = s:loclist_follow_target[1]
     endif
