@@ -1,7 +1,13 @@
 # changelog
 
+#### 2019Jun22
+## release: 0.3.0 version: -
+- [add] dynamic target types ([Pete Beardmore](https://github.com/elbeardmorez))
+- [add] loclist target type ([Pete Beardmore](https://github.com/elbeardmorez))
+- [add] configurable hook events ([Pete Beardmore](https://github.com/elbeardmorez))
+
 #### 2019Jun18
-## release: 0.2.0 version: -
+## release: 0.2.0 version: 735d22c89b19648a9e231f07787acdb12de15e2d
 - [mod] refactor automation ([Pete Beardmore](https://github.com/elbeardmorez))
 - [add] 'LoclistFollowGlobalToggle' ([Pete Beardmore](https://github.com/elbeardmorez))
 
