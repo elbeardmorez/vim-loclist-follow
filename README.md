@@ -23,6 +23,8 @@ The global `g:loclist_follow_target` variable and its corresponding command for 
 - `nearest`  : targets the closest item to the cursor on a line basis
 - `previous`  : targets the item under cursor, else the previous item in the list
 - `next`  : targets the item under cursor, else the next item in the list
+- `towards`  : targets the item under cursor, else the *next* item given the direction of your cursor movement
+- `away`  : inverts the behaviour described for `towards`
 
 ## installation
 #### autoload

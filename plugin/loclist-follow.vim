@@ -4,7 +4,7 @@ let s:loclist_follow_modes = 'ni'
 let s:loclist_follow_target = [0, 'nearest']
 " mode event map
 let s:loclist_follow_hook_events = {'n': 'CursorMoved', 'i': 'CursorMovedI'}
-let s:loclist_follow_target_types = {0: [0, 'nearest'], 1: [1, 'previous'], 2: [2, 'next']}
+let s:loclist_follow_target_types = {0: [0, 'nearest'], 1: [1, 'previous'], 2: [2, 'next'], 3: [3, 'towards'], 4: [4, 'away']}
 
 " jump to nearest item in the location list based on current line
 function! s:LoclistNearest(bnr) abort
@@ -25,11 +25,26 @@ function! s:LoclistNearest(bnr) abort
     endif
     let pos = getpos('.')
     let ln = pos[1]
+    let col = pos[2]
 
     " determine current item based of target type (default: nearest), assume
     " last as optimum start, correct and account for multiple items per line
 
     let target = s:loclist_follow_target[1]
+    if target ==? 'towards' || target ==? 'away'
+        if exists('b:loclist_follow_cursor')
+            if ln > b:loclist_follow_cursor[1] ||
+               \ (ln == b:loclist_follow_cursor[1] &&
+               \  col > b:loclist_follow_cursor[2])
+                let target = target ==? 'towards' ? 'next' : 'previous'
+            else
+                let target = target ==? 'towards' ? 'previous' : 'next'
+            endif
+        else
+            let target = 'nearest'
+        end
+        let b:loclist_follow_cursor = pos
+    endif
     let idx = 0
 
     " line
@@ -45,7 +60,6 @@ function! s:LoclistNearest(bnr) abort
 
     " column
     if get(ll, idx).lnum == ln
-        let col = pos[2]
         while idx + 1 < l_ll && get(ll, idx + 1).lnum == ln
             if col > get(ll, idx + 1).col
                 let idx += 1
@@ -224,6 +238,7 @@ function! s:BufReadPostHook(file_) abort
         if exists('b:loclist_follow_file') && b:loclist_follow_file != a:file_
             " reset
             unlet! b:loclist_follow_pos
+            unlet! b:loclist_follow_cursor
         endif
         let b:loclist_follow_file = a:file_
     else
@@ -231,6 +246,7 @@ function! s:BufReadPostHook(file_) abort
         unlet! b:loclist_follow
         unlet! b:loclist_follow_file
         unlet! b:loclist_follow_pos
+        unlet! b:loclist_follow_cursor
     endif
 endfunction
 
