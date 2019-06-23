@@ -76,8 +76,8 @@ function! s:LoclistFollow(scope, bnr) abort
                 break
             endif
         endwhile
-        if target ==? 'previous' && col >= get(ll, idx)[1].col
-            let idx = min([idx + 1, l_ll])
+        if target ==? 'previous' && col < get(ll, idx)[1].col
+            let idx = max([idx - 1, 0])
         elseif target ==? 'next' && col > get(ll, idx)[1].col
             let idx = min([idx + 1, l_ll])
         endif
@@ -86,7 +86,7 @@ function! s:LoclistFollow(scope, bnr) abort
     let jump = 0
     if target ==? 'nearest'
         let jump = abs(get(ll, max([idx - 1, 0]))[1].lnum - ln) < abs(get(ll,idx)[1].lnum - ln) ? -1 : 0
-    elseif target ==? 'previous'
+    elseif target ==? 'previous' && get(ll, idx)[1].lnum > ln
         let jump = -1
     endif
     let idx_next = min([max([idx + jump, 0]), l_ll - 1])
