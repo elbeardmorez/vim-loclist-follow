@@ -91,11 +91,13 @@ function! s:LoclistFollow(scope, bnr) abort
     endif
     let idx_next = min([max([idx + jump, 0]), l_ll - 1])
 
-    " set
-    if idx_next < 0 || (exists('b:loclist_follow_pos') && b:loclist_follow_pos == idx_next + 1)
+    " transform sub list idx (0-based) to full list position (1-based)
+    let ll_pos = ll[idx_next][0]
+    if exists('b:loclist_follow_pos') && b:loclist_follow_pos == ll_pos
         return
     endif
-    let ll_pos = ll[idx_next][0]
+
+    " set
     let b:loclist_follow_pos = ll_pos
     exe (a:scope ==? 'global' ? 'cc' : 'll') b:loclist_follow_pos
     call setpos('.', pos)
