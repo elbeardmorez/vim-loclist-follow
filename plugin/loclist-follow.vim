@@ -15,12 +15,16 @@ function! s:LoclistFollow(bnr) abort
     if exists('b:loclist_follow_file') && b:loclist_follow_file != fnamemodify(bufname(''), ':p')
         return
     endif
-    let ll = getloclist('')
+    let ll = []
+    let ll_pos = 1
+    for v in getloclist('')
+        if v.bufnr == a:bnr
+            call add(ll, [ll_pos, v])
+        endif
+        let ll_pos += 1
+    endfor
     let l_ll = len(ll)
     if l_ll == 0
-        return
-    endif
-    if a:bnr != ll[0].bufnr
         return
     endif
     let pos = getpos('.')
@@ -51,36 +55,36 @@ function! s:LoclistFollow(bnr) abort
     if exists('b:loclist_follow_pos')
         let idx = min([l_ll - 1, b:loclist_follow_pos - 1])
     endif
-    while get(ll, idx).lnum >= ln && idx > 0
+    while get(ll, idx)[1].lnum >= ln && idx > 0
         let idx -= 1
     endwhile
-    while get(ll, idx).lnum < ln && idx < l_ll - 1
+    while get(ll, idx)[1].lnum < ln && idx < l_ll - 1
         let idx += 1
     endwhile
 
     " column
-    if get(ll, idx).lnum == ln
-        while idx + 1 < l_ll && get(ll, idx + 1).lnum == ln
-            if col > get(ll, idx + 1).col
+    if get(ll, idx)[1].lnum == ln
+        while idx + 1 < l_ll && get(ll, idx + 1)[1].lnum == ln
+            if col > get(ll, idx + 1)[1].col
                 let idx += 1
-            elseif col == get(ll, idx).col && col == get(ll, idx + 1).col
+            elseif col == get(ll, idx)[1].col && col == get(ll, idx + 1)[1].col
                 break
-            elseif abs(get(ll, idx + 1).col - col) < abs(get(ll, idx).col - col)
+            elseif abs(get(ll, idx + 1)[1].col - col) < abs(get(ll, idx)[1].col - col)
                 let idx += 1
             else
                 break
             endif
         endwhile
-        if target ==? 'previous' && col >= get(ll, idx).col
+        if target ==? 'previous' && col >= get(ll, idx)[1].col
             let idx = min([idx + 1, l_ll])
-        elseif target ==? 'next' && col > get(ll, idx).col
+        elseif target ==? 'next' && col > get(ll, idx)[1].col
             let idx = min([idx + 1, l_ll])
         endif
     endif
 
     let jump = 0
     if target ==? 'nearest'
-        let jump = abs(get(ll, max([idx - 1, 0])).lnum - ln) < abs(get(ll,idx).lnum - ln) ? -1 : 0
+        let jump = abs(get(ll, max([idx - 1, 0]))[1].lnum - ln) < abs(get(ll,idx)[1].lnum - ln) ? -1 : 0
     elseif target ==? 'previous'
         let jump = -1
     endif
@@ -90,7 +94,8 @@ function! s:LoclistFollow(bnr) abort
     if idx_next < 0 || (exists('b:loclist_follow_pos') && b:loclist_follow_pos == idx_next + 1)
         return
     endif
-    let b:loclist_follow_pos = idx_next + 1
+    let ll_pos = ll[idx_next][0]
+    let b:loclist_follow_pos = ll_pos
     exe 'll ' . b:loclist_follow_pos
     call setpos('.', pos)
 endfunction
