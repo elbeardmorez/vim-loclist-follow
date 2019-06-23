@@ -79,7 +79,7 @@ function! s:LoclistFollow(scope, bnr) abort
         if target ==? 'previous' && col < get(ll, idx)[1].col
             let idx = max([idx - 1, 0])
         elseif target ==? 'next' && col > get(ll, idx)[1].col
-            let idx = min([idx + 1, l_ll])
+            let idx = min([idx + 1, l_ll - 1])
         endif
     endif
 
