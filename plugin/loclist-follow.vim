@@ -4,7 +4,7 @@ let s:loclist_follow_modes = 'ni'
 let s:loclist_follow_target = [0, 'nearest']
 " mode event map
 let s:loclist_follow_hook_events = {'n': 'CursorMoved', 'i': 'CursorMovedI'}
-let s:loclist_follow_target_types = {0: [0, 'nearest'], 1: [1, 'previous'], 2: [2, 'next'], 3: [3, 'towards'], 4: [4, 'away']}
+let s:loclist_follow_target_types = {0: [0, 'nearest'], 1: [1, 'previous'], 2: [2, 'next'], 3: [3, 'towards'], 4: [4, 'away'], 5: [5, 'last']}
 
 " jump to nearest item in the location list based on current line
 function! s:LoclistFollow(scope, bnr) abort
@@ -32,9 +32,11 @@ function! s:LoclistFollow(scope, bnr) abort
     let ln = pos[1]
     let col = pos[2]
 
-    " determine current item based of target type (default: nearest), assume
-    " last as optimum start, correct and account for multiple items per line
+    " determine current item based of target type (default: nearest), where
+    " searching, assume last position as optimum start, correct and account
+    " for multiple items per line
 
+    let search = 1
     let target = s:loclist_follow_target[1]
     if target ==? 'towards' || target ==? 'away'
         if exists('b:loclist_follow_cursor')
@@ -49,7 +51,41 @@ function! s:LoclistFollow(scope, bnr) abort
             let target = 'nearest'
         end
         let b:loclist_follow_cursor = pos
+    elseif target ==? 'last'
+        let target = 'nearest'  " default fall back
+        let hits = filter(copy(ll), 'v:val[1].lnum == ln && v:val[1].col == col')
+        if len(hits) > 0
+            " update, use the first hit!
+            let ll_pos = hits[0][0]
+            let b:loclist_follow_last = [hits[0][1].lnum, hits[0][1].col, hits[0][1].text]
+            let search = 0
+        elseif exists('b:loclist_follow_last')
+            " b:loclist_follow_last | 0: line, 1: col, 2: text
+            " potential shuffle from existing if it was 'many-to-one'
+            let hits = filter(copy(ll), 'v:val[1].lnum == b:loclist_follow_last[0] && ' .
+                                \ 'v:val[1].col == b:loclist_follow_last[1]')
+            if len(hits) > 0
+                for item in hits
+                    if item[1].text == b:loclist_follow_last[2]
+                        " last is still valid (probably!)
+                        if ln > b:loclist_follow_last[0] ||
+                             \ (ln == b:loclist_follow_last[0] && col > b:loclist_follow_last[1])
+                            let ll_pos = hits[-1][0]
+                            let b:loclist_follow_last =
+                                 \ [hits[-1][1].lnum, hits[-1][1].col, hits[-1][1].text]
+                        else
+                            let ll_pos = hits[-1][0]
+                        endif
+                        let search = 0
+                        break
+                    endif
+                endfor
     endif
+        endif
+    endif
+
+    " search
+    if search
     let idx = 0
 
     " line
@@ -95,6 +131,7 @@ function! s:LoclistFollow(scope, bnr) abort
     let ll_pos = ll[idx_next][0]
     if exists('b:loclist_follow_pos') && b:loclist_follow_pos == ll_pos
         return
+    endif
     endif
 
     " set
@@ -255,6 +292,7 @@ function! s:BufReadPostHook(file_) abort
             " reset
             unlet! b:loclist_follow_pos
             unlet! b:loclist_follow_cursor
+            unlet! b:loclist_follow_last
         endif
         let b:loclist_follow_file = a:file_
     else
@@ -263,6 +301,7 @@ function! s:BufReadPostHook(file_) abort
         unlet! b:loclist_follow_file
         unlet! b:loclist_follow_pos
         unlet! b:loclist_follow_cursor
+        unlet! b:loclist_follow_last
     endif
 endfunction
 
