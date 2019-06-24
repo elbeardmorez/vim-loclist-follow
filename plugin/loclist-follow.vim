@@ -80,58 +80,58 @@ function! s:LoclistFollow(scope, bnr) abort
                         break
                     endif
                 endfor
-    endif
+            endif
         endif
     endif
 
     " search
     if search
-    let idx = 0
+        let idx = 0
 
-    " line
-    if exists('b:loclist_follow_pos')
-        let idx = min([l_ll - 1, b:loclist_follow_pos - 1])
-    endif
-    while get(ll, idx)[1].lnum >= ln && idx > 0
-        let idx -= 1
-    endwhile
-    while get(ll, idx)[1].lnum < ln && idx < l_ll - 1
-        let idx += 1
-    endwhile
-
-    " column
-    if get(ll, idx)[1].lnum == ln
-        while idx + 1 < l_ll && get(ll, idx + 1)[1].lnum == ln
-            if col > get(ll, idx + 1)[1].col
-                let idx += 1
-            elseif col == get(ll, idx)[1].col && col == get(ll, idx + 1)[1].col
-                break
-            elseif abs(get(ll, idx + 1)[1].col - col) < abs(get(ll, idx)[1].col - col)
-                let idx += 1
-            else
-                break
-            endif
-        endwhile
-        if target ==? 'previous' && col < get(ll, idx)[1].col
-            let idx = max([idx - 1, 0])
-        elseif target ==? 'next' && col > get(ll, idx)[1].col
-            let idx = min([idx + 1, l_ll - 1])
+        " line
+        if exists('b:loclist_follow_pos')
+            let idx = min([l_ll - 1, b:loclist_follow_pos - 1])
         endif
-    endif
+        while get(ll, idx)[1].lnum >= ln && idx > 0
+            let idx -= 1
+        endwhile
+        while get(ll, idx)[1].lnum < ln && idx < l_ll - 1
+            let idx += 1
+        endwhile
 
-    let jump = 0
-    if target ==? 'nearest'
-        let jump = abs(get(ll, max([idx - 1, 0]))[1].lnum - ln) < abs(get(ll,idx)[1].lnum - ln) ? -1 : 0
-    elseif target ==? 'previous' && get(ll, idx)[1].lnum > ln
-        let jump = -1
-    endif
-    let idx_next = min([max([idx + jump, 0]), l_ll - 1])
+        " column
+        if get(ll, idx)[1].lnum == ln
+            while idx + 1 < l_ll && get(ll, idx + 1)[1].lnum == ln
+                if col > get(ll, idx + 1)[1].col
+                    let idx += 1
+                elseif col == get(ll, idx)[1].col && col == get(ll, idx + 1)[1].col
+                    break
+                elseif abs(get(ll, idx + 1)[1].col - col) < abs(get(ll, idx)[1].col - col)
+                    let idx += 1
+                else
+                    break
+                endif
+            endwhile
+            if target ==? 'previous' && col < get(ll, idx)[1].col
+                let idx = max([idx - 1, 0])
+            elseif target ==? 'next' && col > get(ll, idx)[1].col
+                let idx = min([idx + 1, l_ll - 1])
+            endif
+        endif
 
-    " transform sub list idx (0-based) to full list position (1-based)
-    let ll_pos = ll[idx_next][0]
-    if exists('b:loclist_follow_pos') && b:loclist_follow_pos == ll_pos
-        return
-    endif
+        let jump = 0
+        if target ==? 'nearest'
+            let jump = abs(get(ll, max([idx - 1, 0]))[1].lnum - ln) < abs(get(ll,idx)[1].lnum - ln) ? -1 : 0
+        elseif target ==? 'previous' && get(ll, idx)[1].lnum > ln
+            let jump = -1
+        endif
+        let idx_next = min([max([idx + jump, 0]), l_ll - 1])
+
+        " transform sub list idx (0-based) to full list position (1-based)
+        let ll_pos = ll[idx_next][0]
+        if exists('b:loclist_follow_pos') && b:loclist_follow_pos == ll_pos
+            return
+        endif
     endif
 
     " set
@@ -163,10 +163,10 @@ function! s:LoclistFollowToggle(...)
         return
     endif
 
-    "switch | -1: off, 0: auto, 1: on
+    " switch | -1: off, 0: auto, 1: on
     let switch = get(a:, 1, 0)
 
-    "b:loclist_follow | -1: globally off, 0: locally off, 1: on
+    " b:loclist_follow | -1: globally off, 0: locally off, 1: on
     let bv = 0
     if switch == 0
         if !exists('b:loclist_follow') || b:loclist_follow != 1
@@ -196,10 +196,10 @@ function! s:LoclistFollowGlobalToggle(...)
         return
     endif
 
-    "switch | -1: off, 0: auto, 1: on
+    " switch | -1: off, 0: auto, 1: on
     let switch = get(a:, 1, 0)
 
-    "g:loclist_follow | 0: globally off, 1: globally on
+    " g:loclist_follow | 0: globally off, 1: globally on
     let gv = 0
     if switch == 0
         if !exists('g:loclist_follow') || g:loclist_follow == 0
@@ -212,19 +212,19 @@ function! s:LoclistFollowGlobalToggle(...)
     let events = s:LoclistFollowHookEvents()
     let g:loclist_follow = gv
     if gv == 0
-        "remove all hooks
+        " remove all hooks
         for ev in events
             execute 'autocmd! loclist_follow' ev
         endfor
     endif
-    "ensure any touched are 'global switched' -1 <-> 1
+    " ensure any touched are 'global switched' -1 <-> 1
     let touched = filter(getbufinfo(), 'exists("v:val.variables.loclist_follow")')
     let bv = (gv == 0 ? -1 : 1)
     for b in touched
         if b.variables.loclist_follow != 0
             call setbufvar(b.bufnr, 'loclist_follow', bv)
             if bv == 1
-                "add hook to previously globally toggled buffer
+                " add hook to previously globally toggled buffer
                 for ev in events
                     execute 'autocmd!' ev '<buffer=' . b.bufnr . '> call s:LoclistFollow("local", ' . b.bufnr . ')'
                     execute 'autocmd!' ev '<buffer=' . b.bufnr . '> call s:LoclistFollow("global", ' . b.bufnr . ')'
