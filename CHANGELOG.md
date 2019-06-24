@@ -1,7 +1,14 @@
 # changelog
 
+#### 2019Jun24
+## release: 0.4.0 version: -
+- [add] 'last' target type ([Pete Beardmore](https://github.com/elbeardmorez))
+- [fix] 'previous' target type extents ([Pete Beardmore](https://github.com/elbeardmorez))
+- [add] quickfix list support ([Andrew Radev](https://github.com/AndrewRadev))
+- [mod] support heterogenous list items ([Pete Beardmore](https://github.com/elbeardmorez))
+
 #### 2019Jun22
-## release: 0.3.0 version: -
+## release: 0.3.0 version: 8a6600c23f974fb619d2070009df3cd8ef13107e
 - [add] dynamic target types ([Pete Beardmore](https://github.com/elbeardmorez))
 - [add] loclist target type ([Pete Beardmore](https://github.com/elbeardmorez))
 - [add] configurable hook events ([Pete Beardmore](https://github.com/elbeardmorez))
