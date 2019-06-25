@@ -311,10 +311,11 @@ endfunction
 
 " install loclist-follow
 augroup loclist_follow
-    autocmd!
     if exists('g:loclist_follow')
         autocmd BufReadPost * call s:BufReadPostHook(expand('<amatch>'))
         autocmd BufDelete * call s:BufDeleteHook(expand('<amatch>'))
+    else
+        autocmd!
     endif
 augroup END
 
