@@ -305,12 +305,16 @@ function! s:BufReadPostHook(file_) abort
     endif
 endfunction
 
+function! s:BufDeleteHook(file_) abort
+    call s:LoclistFollowToggle(-1)
+endfunction
+
 " install loclist-follow
 augroup loclist_follow
     autocmd!
     if exists('g:loclist_follow')
         autocmd BufReadPost * call s:BufReadPostHook(expand('<amatch>'))
-        autocmd BufDelete * call s:LoclistFollowToggle(-1)
+        autocmd BufDelete * call s:BufDeleteHook(expand('<amatch>'))
     endif
 augroup END
 
