@@ -8,19 +8,33 @@ let s:loclist_follow_target_types = {0: [0, 'nearest'], 1: [1, 'previous'], 2: [
 
 " jump to (global/local) location list 'target' item based on current line
 function! s:LoclistFollow(scope, bnr) abort
-    let ll = []
-    let ll_pos = 1
     let ll_scope = a:scope ==? 'global' ? getqflist() : getloclist('')
+    let l_ll_scope = len(ll_scope)
+    let ll = []  " local item subset to global pos 'map'
+    let ll_g2l = {}  " global line pos to local idx map
+
+    " build local items subset and global line pos to local idx map
+    let l_pos = 1
+    let l_idx = 0
     for v in ll_scope
         if v.bufnr == a:bnr
-            call add(ll, [ll_pos, v])
+            call add(ll, [l_pos, v])
+            let ll_g2l[l_pos] = l_idx
+            let l_idx += 1
         endif
-        let ll_pos += 1
+        let l_pos += 1
     endfor
     let l_ll = len(ll)
     if l_ll == 0
         return
     endif
+
+    " position in list
+    "" current
+    let ll_pos_cur = a:scope ==? 'global' ? getqflist({'idx': 0}) : getloclist('', {'idx': 0})
+    "" next
+    let ll_pos = ll_pos_cur
+
     let pos = getpos('.')
     let ln = pos[1]
     let col = pos[2]
@@ -79,12 +93,10 @@ function! s:LoclistFollow(scope, bnr) abort
 
     " search
     if search
-        let idx = 0
+        " start from current pos if possible
+        let idx = get(ll_g2l, ll_pos_cur, 0)
 
         " line
-        if exists('b:loclist_follow_pos')
-            let idx = min([l_ll - 1, b:loclist_follow_pos - 1])
-        endif
         while get(ll, idx)[1].lnum >= ln && idx > 0
             let idx -= 1
         endwhile
@@ -122,9 +134,11 @@ function! s:LoclistFollow(scope, bnr) abort
 
         " transform sub list idx (0-based) to full list position (1-based)
         let ll_pos = ll[idx_next][0]
-        if exists('b:loclist_follow_pos') && b:loclist_follow_pos == ll_pos
-            return
-        endif
+    endif
+
+    " ignore?
+    if ll_pos == ll_pos_cur
+        return
     endif
 
     " set
