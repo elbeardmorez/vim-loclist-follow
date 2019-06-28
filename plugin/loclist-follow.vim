@@ -6,21 +6,10 @@ let s:loclist_follow_target = [0, 'nearest']
 let s:loclist_follow_hook_events = {'n': 'CursorMoved', 'i': 'CursorMovedI'}
 let s:loclist_follow_target_types = {0: [0, 'nearest'], 1: [1, 'previous'], 2: [2, 'next'], 3: [3, 'towards'], 4: [4, 'away'], 5: [5, 'last']}
 
-" jump to nearest item in the location list based on current line
+" jump to (global/local) location list 'target' item based on current line
 function! s:LoclistFollow(scope, bnr) abort
-    " short-circuits
-    if exists('b:loclist_follow') && !b:loclist_follow
-        return
-    endif
-    if exists('b:loclist_follow_file') && b:loclist_follow_file != fnamemodify(bufname(''), ':p')
-        return
-    endif
     let ll = []
     let ll_pos = 1
-    let ll_info = a:scope ==? 'global' ? getqflist({'size': 0}) : getloclist('', {'size': 0})
-    if ll_info.size == 0
-        return
-    endif
     let ll_scope = a:scope ==? 'global' ? getqflist() : getloclist('')
     for v in ll_scope
         if v.bufnr == a:bnr
@@ -144,6 +133,24 @@ function! s:LoclistFollow(scope, bnr) abort
     call setpos('.', pos)
 endfunction
 
+function! s:LoclistsFollow(bnr) abort
+    " short-circuits
+    if exists('b:loclist_follow') && !b:loclist_follow
+        return
+    endif
+    if exists('b:loclist_follow_file') && b:loclist_follow_file != fnamemodify(bufname(''), ':p')
+        return
+    endif
+    " local list
+    if getloclist('', {'size': 0}).size > 0
+        call s:LoclistFollow('local', a:bnr)
+    endif
+    " global list
+    if getqflist({'size': 0}).size > 0
+        call s:LoclistFollow('global', a:bnr)
+    endif
+endfunction
+
 " retrieve list of selected hook events
 function! s:LoclistFollowHookEvents()
     let modes = exists('g:loclist_follow_modes') ? g:loclist_follow_modes : s:loclist_follow_modes
@@ -184,8 +191,7 @@ function! s:LoclistFollowToggle(...)
     let b:loclist_follow = bv
     if bv
         for ev in events
-            execute 'autocmd loclist_follow' ev '<buffer=' . bufnr('') . '> call s:LoclistFollow("local", ' . bufnr('') . ')'
-            execute 'autocmd loclist_follow' ev '<buffer=' . bufnr('') . '> call s:LoclistFollow("global", ' . bufnr('') . ')'
+            execute 'autocmd loclist_follow' ev '<buffer=' . bufnr('') . '> call s:LoclistsFollow(' . bufnr('') . ')'
         endfor
     else
         for ev in events
@@ -230,8 +236,7 @@ function! s:LoclistFollowGlobalToggle(...)
             if bv == 1
                 " add hook to previously globally toggled buffer
                 for ev in events
-                    execute 'autocmd!' ev '<buffer=' . b.bufnr . '> call s:LoclistFollow("local", ' . b.bufnr . ')'
-                    execute 'autocmd!' ev '<buffer=' . b.bufnr . '> call s:LoclistFollow("global", ' . b.bufnr . ')'
+                    execute 'autocmd!' ev '<buffer=' . b.bufnr . '> call s:LoclistsFollow(' . b.bufnr . ')'
                 endfor
             endif
         endif
