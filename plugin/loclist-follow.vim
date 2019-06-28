@@ -17,6 +17,10 @@ function! s:LoclistFollow(scope, bnr) abort
     endif
     let ll = []
     let ll_pos = 1
+    let ll_info = a:scope ==? 'global' ? getqflist({'size': 0}) : getloclist('', {'size': 0})
+    if ll_info.size == 0
+        return
+    endif
     let ll_scope = a:scope ==? 'global' ? getqflist() : getloclist('')
     for v in ll_scope
         if v.bufnr == a:bnr
