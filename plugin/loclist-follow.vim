@@ -152,7 +152,8 @@ function! s:LoclistsFollow(bnr) abort
     if exists('b:loclist_follow') && !b:loclist_follow
         return
     endif
-    if exists('b:loclist_follow_file') && b:loclist_follow_file != fnamemodify(bufname(''), ':p')
+    " additional 'resolve' wrapper required < v8.0.1781
+    if exists('b:loclist_follow_file') && b:loclist_follow_file != resolve(fnamemodify(bufname(''), ':p'))
         return
     endif
     " local list
