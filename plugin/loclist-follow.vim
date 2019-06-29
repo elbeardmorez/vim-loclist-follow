@@ -6,6 +6,24 @@ let s:loclist_follow_target = [0, 'nearest']
 let s:loclist_follow_hook_events = {'n': 'CursorMoved', 'i': 'CursorMovedI'}
 let s:loclist_follow_target_types = {0: [0, 'nearest'], 1: [1, 'previous'], 2: [2, 'next'], 3: [3, 'towards'], 4: [4, 'away'], 5: [5, 'last']}
 
+function! s:LoclistFollowSize(scope) abort
+    " 'size' option >= v8.0.1112
+    return a:scope ==? 'local' ?
+        \ get(getloclist('', {'size': 0}), 'size', len(getloclist(''))) :
+        \ get(getqflist({'size': 0}), 'size', len(getqflist()))
+endfunction
+
+function! s:LoclistFollowPos(scope) abort
+    " 'idx' option >= v8.0.1112
+    if get(getqflist({'idx': 0}), 'idx', -1) != -1
+        return a:scope ==? 'local' ?
+                 \ get(getloclist('', {'idx': 0}), 'idx', 1) :
+                 \ get(getqflist({'idx': 0}), 'idx', 1)
+    else
+        return exists('b:loclist_follow_pos') ? b:loclist_follow_pos : 1
+    endif
+endfunction
+
 " jump to (global/local) location list 'target' item based on current line
 function! s:LoclistFollow(scope, bnr) abort
     let ll_scope = a:scope ==? 'global' ? getqflist() : getloclist('')
@@ -31,7 +49,7 @@ function! s:LoclistFollow(scope, bnr) abort
 
     " position in list
     "" current
-    let ll_pos_cur = a:scope ==? 'global' ? getqflist({'idx': 0}) : getloclist('', {'idx': 0})
+    let ll_pos_cur = s:LoclistFollowPos(a:scope)
     "" next
     let ll_pos = ll_pos_cur
 
@@ -157,11 +175,11 @@ function! s:LoclistsFollow(bnr) abort
         return
     endif
     " local list
-    if getloclist('', {'size': 0}).size > 0
+    if s:LoclistFollowSize('local') > 0
         call s:LoclistFollow('local', a:bnr)
     endif
     " global list
-    if getqflist({'size': 0}).size > 0
+    if s:LoclistFollowSize('global') > 0
         call s:LoclistFollow('global', a:bnr)
     endif
 endfunction
