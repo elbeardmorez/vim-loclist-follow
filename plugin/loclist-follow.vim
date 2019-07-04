@@ -175,11 +175,13 @@ function! s:LoclistsFollow(bnr) abort
         return
     endif
     " local list
-    if s:LoclistFollowSize('local') > 0
+    if s:LoclistFollowSize('local') > 0 &&
+       \ get(getloclist('', {'winid': 0}), 'winid', -1) > -1
         call s:LoclistFollow('local', a:bnr)
     endif
     " global list
-    if s:LoclistFollowSize('global') > 0
+    if s:LoclistFollowSize('global') > 0 &&
+       \ get(getqflist({'winid': 0}), 'winid', -1) > -1
         call s:LoclistFollow('global', a:bnr)
     endif
 endfunction
