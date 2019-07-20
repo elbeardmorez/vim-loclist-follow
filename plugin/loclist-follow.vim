@@ -271,7 +271,7 @@ function! s:LoclistFollowGlobalToggle(...)
             if bv == 1
                 " add hook to previously globally toggled buffer
                 for ev in events
-                    execute 'autocmd!' ev '<buffer=' . b.bufnr . '> call s:LoclistsFollow(' . b.bufnr . ')'
+                    execute 'autocmd! loclist_follow' ev '<buffer=' . b.bufnr . '> call s:LoclistsFollow(' . b.bufnr . ')'
                 endfor
             endif
         endif
