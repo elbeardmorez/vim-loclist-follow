@@ -359,6 +359,9 @@ augroup loclist_follow
         " (re-)install global hooks
         autocmd! BufReadPost * call s:BufReadPostHook(expand('<amatch>'))
         autocmd! BufDelete * call s:BufDeleteHook(expand('<amatch>'))
+        " set state
+        call s:LoclistFollowTarget()
+        call s:LoclistFollowHookEvents()
     else
         " remove all hooks
         autocmd!
