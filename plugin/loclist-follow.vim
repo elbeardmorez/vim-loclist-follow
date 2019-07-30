@@ -226,7 +226,7 @@ function! s:LoclistFollowToggle(...)
     let b:loclist_follow = bv
     if bv
         for ev in events
-            execute 'autocmd loclist_follow' ev '<buffer=' . bufnr('') . '> call s:LoclistsFollow(' . bufnr('') . ')'
+            execute 'autocmd! loclist_follow' ev '<buffer=' . bufnr('') . '> call s:LoclistsFollow(' . bufnr('') . ')'
         endfor
     else
         for ev in events
@@ -356,9 +356,11 @@ endfunction
 " install loclist-follow
 augroup loclist_follow
     if exists('g:loclist_follow')
-        autocmd BufReadPost * call s:BufReadPostHook(expand('<amatch>'))
-        autocmd BufDelete * call s:BufDeleteHook(expand('<amatch>'))
+        " (re-)install global hooks
+        autocmd! BufReadPost * call s:BufReadPostHook(expand('<amatch>'))
+        autocmd! BufDelete * call s:BufDeleteHook(expand('<amatch>'))
     else
+        " remove all hooks
         autocmd!
     endif
 augroup END
