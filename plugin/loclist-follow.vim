@@ -350,6 +350,10 @@ function! s:BufReadPostHook(file_) abort
 endfunction
 
 function! s:BufDeleteHook(file_) abort
+    if getwininfo(win_getid())[0].quickfix == 1 ||
+       \ !filereadable(a:file_)
+        return
+    endif
     call s:LoclistFollowToggle(-1)
 endfunction
 
