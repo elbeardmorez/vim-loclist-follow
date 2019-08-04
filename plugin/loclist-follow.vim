@@ -204,13 +204,13 @@ function! s:LoclistFollowHookEvents()
 endfunction
 
 " toggle follow locally
-function! s:LoclistFollowToggle(...)
+function! s:LoclistFollowToggle(bnr, ...)
     if !exists('g:loclist_follow')
         return
     endif
 
     " switch | -1: off, 0: auto, 1: on
-    let switch = get(a:, 1, 0)
+    let switch = get(a:, 2, 0)
 
     " b:loclist_follow | -1: globally off, 0: locally off, 1: on
     let bv = 0
@@ -226,11 +226,11 @@ function! s:LoclistFollowToggle(...)
     let b:loclist_follow = bv
     if bv
         for ev in events
-            execute 'autocmd! loclist_follow' ev '<buffer=' . bufnr('') . '> call s:LoclistsFollow(' . bufnr('') . ')'
+            execute 'autocmd! loclist_follow' ev '<buffer=' . a:bnr . '> call s:LoclistsFollow(' . a:bnr . ')'
         endfor
     else
         for ev in events
-            execute 'autocmd! loclist_follow' ev '<buffer>'
+            execute 'autocmd! loclist_follow' ev '<buffer=' . a:bnr . '>'
         endfor
     endif
 endfunction
@@ -315,7 +315,7 @@ function! s:LoclistFollowTargetToggle()
     endif
 endfunction
 
-function! s:BufReadPostHook(file_) abort
+function! s:BufReadPostHook(bnr, file_) abort
     if !exists('g:loclist_follow')
         return
     endif
@@ -330,7 +330,7 @@ function! s:BufReadPostHook(file_) abort
         endif
         if !exists('b:loclist_follow')
             " enable loclist-follow
-            call s:LoclistFollowToggle(1)
+            call s:LoclistFollowToggle(a:bnr, 1)
         endif
         if exists('b:loclist_follow_file') && b:loclist_follow_file != a:file_
             " reset
@@ -340,7 +340,7 @@ function! s:BufReadPostHook(file_) abort
         endif
         let b:loclist_follow_file = a:file_
     else
-        call s:LoclistFollowToggle(-1)
+        call s:LoclistFollowToggle(a:bnr, -1)
         unlet! b:loclist_follow
         unlet! b:loclist_follow_file
         unlet! b:loclist_follow_pos
@@ -349,20 +349,20 @@ function! s:BufReadPostHook(file_) abort
     endif
 endfunction
 
-function! s:BufDeleteHook(file_) abort
+function! s:BufDeleteHook(bnr, file_) abort
     if getwininfo(win_getid())[0].quickfix == 1 ||
        \ !filereadable(a:file_)
         return
     endif
-    call s:LoclistFollowToggle(-1)
+    call s:LoclistFollowToggle(a:bnr, -1)
 endfunction
 
 " install loclist-follow
 augroup loclist_follow
     if exists('g:loclist_follow')
         " (re-)install global hooks
-        autocmd! BufReadPost * call s:BufReadPostHook(expand('<amatch>'))
-        autocmd! BufDelete * call s:BufDeleteHook(expand('<amatch>'))
+        autocmd! BufReadPost * call s:BufReadPostHook(expand('<abuf>'), expand('<amatch>'))
+        autocmd! BufDelete * call s:BufDeleteHook(expand('<abuf>'), expand('<amatch>'))
         " set state
         call s:LoclistFollowTarget()
         call s:LoclistFollowHookEvents()
@@ -372,6 +372,6 @@ augroup loclist_follow
     endif
 augroup END
 
-command! -bar LoclistFollowToggle call s:LoclistFollowToggle()
+command! -bar LoclistFollowToggle call s:LoclistFollowToggle(bufnr(''))
 command! -bar LoclistFollowGlobalToggle call s:LoclistFollowGlobalToggle()
 command! -bar LoclistFollowTargetToggle call s:LoclistFollowTargetToggle()
