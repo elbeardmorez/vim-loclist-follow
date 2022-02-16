@@ -364,7 +364,10 @@ augroup loclist_follow
         autocmd! BufReadPost * call s:BufReadPostHook(expand('<abuf>'), expand('<amatch>'))
         autocmd! BufDelete * call s:BufDeleteHook(expand('<abuf>'), expand('<amatch>'))
         " set state
-        call s:LoclistFollowTarget()
+        if exists('g:loclist_follow_target')
+            " validate target
+            call s:LoclistFollowTarget()
+        endif
         call s:LoclistFollowHookEvents()
     else
         " remove all hooks
